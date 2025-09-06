@@ -1,0 +1,193 @@
+openapi: 3.0.3
+info:
+  title: Light API
+  description: 軽量な外部API（1トークン消費）
+  version: 1.0.0
+  contact:
+    name: Token Bucket Demo
+    url: https://github.com/tokenbucket/demo
+
+servers:
+  - url: http://localhost:8082
+    description: 開発環境
+
+paths:
+  /api/light:
+    get:
+      summary: 軽量API呼び出し
+      description: 軽量な処理を行うAPI（1トークン消費）
+      operationId: getLightApi
+      tags:
+        - Light API
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LightApiResponse'
+              examples:
+                success:
+                  summary: 成功レスポンス
+                  value:
+                    status: "success"
+                    message: "Light API response"
+                    timestamp: "2024-01-01T00:00:00Z"
+                    processingTime: 100
+                    tokenConsumed: 1
+        '429':
+          description: レート制限超過
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limit_exceeded:
+                  summary: レート制限超過レスポンス
+                  value:
+                    error: "RATE_LIMIT_EXCEEDED"
+                    message: "Too many requests. Please try again later."
+                    timestamp: "2024-01-01T00:00:00Z"
+                    details:
+                      retryAfter: 60
+                      limit: 10
+                      remaining: 0
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/light/status:
+    get:
+      summary: 軽量APIの状態確認
+      description: 軽量APIの現在の状態を取得
+      operationId: getLightApiStatus
+      tags:
+        - Light API
+      parameters:
+        - name: force_error
+          in: query
+          description: 強制的にエラーを返す（429, 500等）
+          required: false
+          schema:
+            type: integer
+            enum: [429, 500]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiStatusResponse'
+        '429':
+          description: レート制限超過（強制）
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: リトライまでの時間（秒）
+              example: 3
+            Limit:
+              schema:
+                type: integer
+              description: リトライまでの時間（秒）
+              example: 3
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forced_rate_limit:
+                  summary: 強制レート制限超過
+                  headers:
+                    Retry-After:
+                      type: integer
+                      description: リトライまでの時間（秒）
+                      example: 30
+                    Limit:
+                      type: integer
+                      description: リトライまでの時間（秒）
+                      example: 30
+                  value:
+                    headers:
+                      Retry-After: 30
+                      Limit: 30
+                    error: "FORCED_RATE_LIMIT"
+                    message: "Rate limit exceeded (forced for testing)"
+                    timestamp: "2024-01-01T00:00:00Z"
+                    details:
+                      retryAfter: 30
+                      reason: "forced_error"
+
+components:
+  schemas:
+    LightApiResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          description: 処理結果のステータス
+        message:
+          type: string
+          description: レスポンスメッセージ
+        timestamp:
+          type: string
+          format: date-time
+          description: レスポンス時刻
+        processingTime:
+          type: integer
+          description: 処理時間（ミリ秒）
+        tokenConsumed:
+          type: integer
+          description: 消費したトークン数
+      required:
+        - status
+        - message
+        - timestamp
+        - processingTime
+        - tokenConsumed
+
+    ApiStatusResponse:
+      type: object
+      properties:
+        apiName:
+          type: string
+          description: API名
+        status:
+          type: string
+          enum: [healthy, degraded, down]
+          description: APIの状態
+        lastCheck:
+          type: string
+          format: date-time
+          description: 最後のチェック時刻
+        responseTime:
+          type: integer
+          description: 平均レスポンス時間（ミリ秒）
+        uptime:
+          type: string
+          description: 稼働時間
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: エラーコード
+        message:
+          type: string
+          description: エラーメッセージ
+        timestamp:
+          type: string
+          format: date-time
+          description: エラー発生時刻
+        details:
+          type: object
+          description: エラーの詳細情報
+
+tags:
+  - name: Light API
+    description: 軽量な外部API関連のエンドポイント 

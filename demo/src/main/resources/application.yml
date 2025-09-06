@@ -1,0 +1,96 @@
+spring:
+  application:
+    name: demo
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 5000ms
+      connect-timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: 5000ms
+        shutdown-timeout: 100ms
+      retry:
+        max-attempts: 3
+        initial-interval: 1000ms
+        multiplier: 2.0
+        max-interval: 5000ms
+
+# ログ設定
+logging:
+  level:
+    token.bucket.demo: DEBUG
+    io.github.bucket4j: DEBUG
+    io.lettuce.core: INFO
+    org.springframework.web: INFO
+
+# レート制限設定（遅延リフィル方式）
+rate-limit:
+  delayed-refill:
+    enabled: true
+    check-interval: 100  # 100ミリ秒間隔でチェック
+    max-batch-size: 100  # 最大バッチサイズ
+    background-processing: true  # バックグラウンド処理有効
+  
+  endpoints:
+    # 軽量API - 1分間に100リクエスト、1秒間に1トークン補充
+    light-api:
+      bucket-key: "/light_api"
+      capacity: 10
+      refill-rate: 10        # 1秒間に1トークン
+      refill-interval: 1    # 1秒間隔
+      ttl-seconds: 30 # TTL
+      refill-time-unit: SECONDS
+      delayed-refill: true  # 遅延リフィル有効
+      max-concurrent-requests: 10
+      timeout: 30
+    
+    # 中程度API - 1分間に30リクエスト、1秒間に0.5トークン補充
+    medium-api:
+      bucket-key: "medium_api"
+      capacity: 30
+      refill-rate: 1        # 1秒間に1トークン
+      refill-interval: 2    # 2秒間隔
+      refill-time-unit: SECONDS
+      delayed-refill: true  # 遅延リフィル有効
+      max-concurrent-requests: 5
+      timeout: 60
+    
+    # 重量API - 1分間に10リクエスト、1秒間に0.17トークン補充
+    heavy-api:
+      bucket-key: "heavy_api"
+      capacity: 10
+      refill-rate: 1        # 1秒間に1トークン
+      refill-interval: 6    # 6秒間隔
+      refill-time-unit: SECONDS
+      delayed-refill: true  # 遅延リフィル有効
+      max-concurrent-requests: 2
+      timeout: 120
+    
+    # ユーザーAPI - 1分間に50リクエスト、1秒間に0.83トークン補充
+    user-api:
+      bucket-key: "user_api"
+      capacity: 50
+      refill-rate: 1        # 1秒間に1トークン
+      refill-interval: 1.2  # 1.2秒間隔
+      refill-time-unit: SECONDS
+      delayed-refill: true  # 遅延リフィル有効
+      max-concurrent-requests: 20
+      timeout: 45

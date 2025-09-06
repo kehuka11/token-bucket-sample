@@ -1,0 +1,424 @@
+openapi: 3.0.3
+info:
+  title: User API
+  description: ユーザー固有の外部API（2トークン消費）
+  version: 1.0.0
+  contact:
+    name: Token Bucket Demo
+    url: https://github.com/tokenbucket/demo
+
+servers:
+  - url: http://localhost:8085
+    description: 開発環境
+
+paths:
+  /api/user/{userId}:
+    get:
+      summary: ユーザー固有API呼び出し
+      description: 特定のユーザー向けのAPI（2トークン消費）
+      operationId: getUserApi
+      tags:
+        - User API
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ユーザーID
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9_-]+$'
+        - name: includeProfile
+          in: query
+          description: プロフィール情報を含めるか
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: includePreferences
+          in: query
+          description: 設定情報を含めるか
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserApiResponse'
+              examples:
+                success:
+                  summary: 成功レスポンス
+                  value:
+                    status: "success"
+                    message: "User-specific API response"
+                    timestamp: "2024-01-01T00:00:00Z"
+                    processingTime: 300
+                    tokenConsumed: 2
+                    userId: "user123"
+                    userData:
+                      name: "John Doe"
+                      email: "john@example.com"
+                      lastLogin: "2024-01-01T00:00:00Z"
+        '400':
+          description: 無効なユーザーID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: ユーザーが見つかりません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: レート制限超過
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/user/{userId}/profile:
+    get:
+      summary: ユーザープロフィール取得
+      description: 特定のユーザーのプロフィール情報を取得（1トークン消費）
+      operationId: getUserProfile
+      tags:
+        - User API
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ユーザーID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '404':
+          description: ユーザーが見つかりません
+
+  /api/user/{userId}/preferences:
+    get:
+      summary: ユーザー設定取得
+      description: 特定のユーザーの設定情報を取得（1トークン消費）
+      operationId: getUserPreferences
+      tags:
+        - User API
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ユーザーID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferencesResponse'
+
+  /api/user/{userId}/activity:
+    get:
+      summary: ユーザーアクティビティ取得
+      description: 特定のユーザーのアクティビティ履歴を取得（3トークン消費）
+      operationId: getUserActivity
+      tags:
+        - User API
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ユーザーID
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 取得件数
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: オフセット
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserActivityResponse'
+
+  /api/user/{userId}/status:
+    get:
+      summary: ユーザーAPIの状態確認
+      description: 特定のユーザー向けAPIの現在の状態を取得
+      operationId: getUserApiStatus
+      tags:
+        - User API
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ユーザーID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserApiStatusResponse'
+
+components:
+  schemas:
+    UserApiResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          description: 処理結果のステータス
+        message:
+          type: string
+          description: レスポンスメッセージ
+        timestamp:
+          type: string
+          format: date-time
+          description: レスポンス時刻
+        processingTime:
+          type: integer
+          description: 処理時間（ミリ秒）
+        tokenConsumed:
+          type: integer
+          description: 消費したトークン数
+        userId:
+          type: string
+          description: ユーザーID
+        userData:
+          $ref: '#/components/schemas/UserData'
+      required:
+        - status
+        - message
+        - timestamp
+        - processingTime
+        - tokenConsumed
+        - userId
+        - userData
+
+    UserData:
+      type: object
+      properties:
+        name:
+          type: string
+          description: ユーザー名
+        email:
+          type: string
+          format: email
+          description: メールアドレス
+        lastLogin:
+          type: string
+          format: date-time
+          description: 最終ログイン時刻
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+        preferences:
+          $ref: '#/components/schemas/UserPreferences'
+
+    UserProfile:
+      type: object
+      properties:
+        firstName:
+          type: string
+          description: 名
+        lastName:
+          type: string
+          description: 姓
+        avatar:
+          type: string
+          format: uri
+          description: アバター画像URL
+        bio:
+          type: string
+          description: 自己紹介
+        location:
+          type: string
+          description: 所在地
+        website:
+          type: string
+          format: uri
+          description: ウェブサイトURL
+
+    UserPreferences:
+      type: object
+      properties:
+        language:
+          type: string
+          enum: [en, ja, zh, ko]
+          description: 言語設定
+        timezone:
+          type: string
+          description: タイムゾーン
+        notifications:
+          type: object
+          properties:
+            email:
+              type: boolean
+              description: メール通知
+            push:
+              type: boolean
+              description: プッシュ通知
+            sms:
+              type: boolean
+              description: SMS通知
+        theme:
+          type: string
+          enum: [light, dark, auto]
+          description: テーマ設定
+
+    UserProfileResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: ユーザーID
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+        lastUpdated:
+          type: string
+          format: date-time
+          description: 最終更新時刻
+
+    UserPreferencesResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: ユーザーID
+        preferences:
+          $ref: '#/components/schemas/UserPreferences'
+        lastUpdated:
+          type: string
+          format: date-time
+          description: 最終更新時刻
+
+    UserActivityResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: ユーザーID
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityItem'
+          description: アクティビティの配列
+        total:
+          type: integer
+          description: 総件数
+        limit:
+          type: integer
+          description: 取得件数
+        offset:
+          type: integer
+          description: オフセット
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: アクティビティID
+        type:
+          type: string
+          enum: [login, logout, api_call, data_access, setting_change]
+          description: アクティビティの種類
+        timestamp:
+          type: string
+          format: date-time
+          description: アクティビティ時刻
+        details:
+          type: object
+          description: アクティビティの詳細
+        ipAddress:
+          type: string
+          description: IPアドレス
+        userAgent:
+          type: string
+          description: ユーザーエージェント
+
+    UserApiStatusResponse:
+      type: object
+      properties:
+        apiName:
+          type: string
+          description: API名
+        userId:
+          type: string
+          description: ユーザーID
+        status:
+          type: string
+          enum: [healthy, degraded, down]
+          description: APIの状態
+        lastCheck:
+          type: string
+          format: date-time
+          description: 最後のチェック時刻
+        responseTime:
+          type: integer
+          description: 平均レスポンス時間（ミリ秒）
+        userSpecificLimits:
+          type: object
+          properties:
+            dailyRequests:
+              type: integer
+              description: 1日のリクエスト制限
+            remainingRequests:
+              type: integer
+              description: 残りリクエスト数
+            resetTime:
+              type: string
+              format: date-time
+              description: 制限リセット時刻
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: エラーコード
+        message:
+          type: string
+          description: エラーメッセージ
+        timestamp:
+          type: string
+          format: date-time
+          description: エラー発生時刻
+        details:
+          type: object
+          description: エラーの詳細情報
+        userId:
+          type: string
+          description: 対象ユーザーID（該当する場合）
+
+tags:
+  - name: User API
+    description: ユーザー固有の外部API関連のエンドポイント 

@@ -1,0 +1,328 @@
+openapi: 3.0.3
+info:
+  title: Heavy API
+  description: 重量な外部API（5トークン消費）
+  version: 1.0.0
+  contact:
+    name: Token Bucket Demo
+    url: https://github.com/tokenbucket/demo
+
+servers:
+  - url: http://localhost:8084
+    description: 開発環境
+
+paths:
+  /api/heavy:
+    get:
+      summary: 重量API呼び出し
+      description: 重量な処理を行うAPI（5トークン消費）
+      operationId: getHeavyApi
+      tags:
+        - Heavy API
+      parameters:
+        - name: workload
+          in: query
+          description: 処理負荷レベル
+          required: false
+          schema:
+            type: string
+            enum: [light, normal, heavy, extreme]
+            default: normal
+        - name: dataSize
+          in: query
+          description: 処理するデータサイズ（MB）
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: priority
+          in: query
+          description: 処理の優先度
+          required: false
+          schema:
+            type: string
+            enum: [low, normal, high, critical]
+            default: normal
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeavyApiResponse'
+              examples:
+                success:
+                  summary: 成功レスポンス
+                  value:
+                    status: "success"
+                    message: "Heavy API response"
+                    timestamp: "2024-01-01T00:00:00Z"
+                    processingTime: 2000
+                    tokenConsumed: 5
+                    workload: "normal"
+                    dataSize: 100
+                    memoryUsed: "256MB"
+                    cpuUsage: "75%"
+        '429':
+          description: レート制限超過
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/heavy/async:
+    post:
+      summary: 重量APIの非同期処理
+      description: 重量な処理を非同期で実行するAPI（8トークン消費）
+      operationId: postHeavyApiAsync
+      tags:
+        - Heavy API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsyncHeavyRequest'
+      responses:
+        '202':
+          description: 処理開始
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncHeavyResponse'
+        '429':
+          description: レート制限超過
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/heavy/status/{jobId}:
+    get:
+      summary: 非同期処理の状態確認
+      description: 非同期処理の現在の状態を取得
+      operationId: getHeavyApiJobStatus
+      tags:
+        - Heavy API
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: ジョブID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusResponse'
+        '404':
+          description: ジョブが見つかりません
+
+  /api/heavy/status:
+    get:
+      summary: 重量APIの状態確認
+      description: 重量APIの現在の状態を取得
+      operationId: getHeavyApiStatus
+      tags:
+        - Heavy API
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeavyApiStatusResponse'
+
+components:
+  schemas:
+    HeavyApiResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          description: 処理結果のステータス
+        message:
+          type: string
+          description: レスポンスメッセージ
+        timestamp:
+          type: string
+          format: date-time
+          description: レスポンス時刻
+        processingTime:
+          type: integer
+          description: 処理時間（ミリ秒）
+        tokenConsumed:
+          type: integer
+          description: 消費したトークン数
+        workload:
+          type: string
+          enum: [light, normal, heavy, extreme]
+          description: 処理負荷レベル
+        dataSize:
+          type: integer
+          description: 処理したデータサイズ（MB）
+        memoryUsed:
+          type: string
+          description: 使用メモリ量
+        cpuUsage:
+          type: string
+          description: CPU使用率
+        result:
+          type: object
+          description: 処理結果
+      required:
+        - status
+        - message
+        - timestamp
+        - processingTime
+        - tokenConsumed
+        - workload
+        - dataSize
+        - memoryUsed
+        - cpuUsage
+
+    AsyncHeavyRequest:
+      type: object
+      properties:
+        taskType:
+          type: string
+          enum: [dataProcessing, machineLearning, reportGeneration, dataMigration]
+          description: タスクの種類
+        parameters:
+          type: object
+          description: タスクのパラメータ
+        callbackUrl:
+          type: string
+          format: uri
+          description: 完了時のコールバックURL
+        estimatedDuration:
+          type: integer
+          description: 推定処理時間（分）
+      required:
+        - taskType
+        - parameters
+
+    AsyncHeavyResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+          description: ジョブID
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+          description: ジョブの状態
+        message:
+          type: string
+          description: レスポンスメッセージ
+        estimatedCompletion:
+          type: string
+          format: date-time
+          description: 推定完了時刻
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: 進捗率（%）
+        tokenConsumed:
+          type: integer
+          description: 消費したトークン数
+
+    JobStatusResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+          description: ジョブID
+        status:
+          type: string
+          enum: [queued, processing, completed, failed, cancelled]
+          description: ジョブの状態
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: 進捗率（%）
+        startTime:
+          type: string
+          format: date-time
+          description: 開始時刻
+        estimatedCompletion:
+          type: string
+          format: date-time
+          description: 推定完了時刻
+        result:
+          type: object
+          description: 処理結果（完了時）
+        error:
+          type: string
+          description: エラーメッセージ（失敗時）
+
+    HeavyApiStatusResponse:
+      type: object
+      properties:
+        apiName:
+          type: string
+          description: API名
+        status:
+          type: string
+          enum: [healthy, degraded, down]
+          description: APIの状態
+        lastCheck:
+          type: string
+          format: date-time
+          description: 最後のチェック時刻
+        responseTime:
+          type: integer
+          description: 平均レスポンス時間（ミリ秒）
+        uptime:
+          type: string
+          description: 稼働時間
+        activeJobs:
+          type: integer
+          description: アクティブなジョブ数
+        queueSize:
+          type: integer
+          description: 現在のキューサイズ
+        memoryUsage:
+          type: string
+          description: メモリ使用量
+        cpuUsage:
+          type: string
+          description: CPU使用率
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: エラーコード
+        message:
+          type: string
+          description: エラーメッセージ
+        timestamp:
+          type: string
+          format: date-time
+          description: エラー発生時刻
+        details:
+          type: object
+          description: エラーの詳細情報
+        retryAfter:
+          type: integer
+          description: リトライまでの待機時間（秒）
+
+tags:
+  - name: Heavy API
+    description: 重量な外部API関連のエンドポイント 

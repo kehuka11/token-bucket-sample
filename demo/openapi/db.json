@@ -1,0 +1,185 @@
+{
+  "posts": [
+    {
+      "id": 1,
+      "title": "トークンバケットレート制限の実装",
+      "body": "Redisを使用したトークンバケットアルゴリズムによるレート制限の実装について説明します。",
+      "userId": 1,
+      "tags": ["redis", "rate-limiting", "token-bucket"],
+      "reactions": 15
+    },
+    {
+      "id": 2,
+      "title": "Luaスクリプト vs Bucket4j の比較",
+      "body": "両方のアプローチの利点と欠点、使い分けについて詳しく解説します。",
+      "userId": 2,
+      "tags": ["comparison", "lua", "bucket4j"],
+      "reactions": 23
+    },
+    {
+      "id": 3,
+      "title": "Spring Bootでのレート制限実装",
+      "body": "AOPを使用した宣言的なレート制限の実装方法を紹介します。",
+      "userId": 1,
+      "tags": ["spring-boot", "aop", "rate-limiting"],
+      "reactions": 18
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "body": "とても参考になりました！",
+      "postId": 1,
+      "userId": 3
+    },
+    {
+      "id": 2,
+      "body": "実装例が分かりやすいです。",
+      "postId": 1,
+      "userId": 4
+    },
+    {
+      "id": 3,
+      "body": "パフォーマンス比較が興味深いです。",
+      "postId": 2,
+      "userId": 5
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "田中太郎",
+      "username": "tanaka_taro",
+      "email": "tanaka@example.com",
+      "address": {
+        "street": "東京都渋谷区",
+        "suite": "Apt. 123",
+        "city": "渋谷区",
+        "zipcode": "150-0002",
+        "geo": {
+          "lat": "35.6581",
+          "lng": "139.7016"
+        }
+      },
+      "phone": "03-1234-5678",
+      "website": "https://tanaka.example.com",
+      "company": {
+        "name": "テック株式会社",
+        "catchPhrase": "未来を創造する",
+        "bs": "革新的なソリューション"
+      }
+    },
+    {
+      "id": 2,
+      "name": "佐藤花子",
+      "username": "sato_hanako",
+      "email": "sato@example.com",
+      "address": {
+        "street": "大阪府大阪市",
+        "suite": "Suite 456",
+        "city": "大阪市",
+        "zipcode": "530-0001",
+        "geo": {
+          "lat": "34.6937",
+          "lng": "135.5023"
+        }
+      },
+      "phone": "06-1234-5678",
+      "website": "https://sato.example.com",
+      "company": {
+        "name": "デベロッパー株式会社",
+        "catchPhrase": "コードで世界を変える",
+        "bs": "高品質なソフトウェア開発"
+      }
+    },
+    {
+      "id": 3,
+      "name": "鈴木一郎",
+      "username": "suzuki_ichiro",
+      "email": "suzuki@example.com",
+      "address": {
+        "street": "愛知県名古屋市",
+        "suite": "Apt. 789",
+        "city": "名古屋市",
+        "zipcode": "460-0008",
+        "geo": {
+          "lat": "35.1815",
+          "lng": "136.9066"
+        }
+      },
+      "phone": "052-123-4567",
+      "website": "https://suzuki.example.com",
+      "company": {
+        "name": "システム株式会社",
+        "catchPhrase": "信頼性の高いシステム",
+        "bs": "安定したインフラ構築"
+      }
+    }
+  ],
+  "todos": [
+    {
+      "id": 1,
+      "title": "トークンバケットの実装を完了する",
+      "completed": true,
+      "userId": 1
+    },
+    {
+      "id": 2,
+      "title": "パフォーマンステストを実行する",
+      "completed": false,
+      "userId": 1
+    },
+    {
+      "id": 3,
+      "title": "ドキュメントを更新する",
+      "completed": false,
+      "userId": 2
+    },
+    {
+      "id": 4,
+      "title": "デモアプリケーションをデプロイする",
+      "completed": false,
+      "userId": 3
+    }
+  ],
+  "albums": [
+    {
+      "id": 1,
+      "title": "システムアーキテクチャ図",
+      "userId": 1
+    },
+    {
+      "id": 2,
+      "title": "パフォーマンス比較結果",
+      "userId": 2
+    },
+    {
+      "id": 3,
+      "title": "実装例のスクリーンショット",
+      "userId": 3
+    }
+  ],
+  "photos": [
+    {
+      "id": 1,
+      "title": "Redis接続設定",
+      "url": "https://via.placeholder.com/600/92c952",
+      "thumbnailUrl": "https://via.placeholder.com/150/92c952",
+      "albumId": 1
+    },
+    {
+      "id": 2,
+      "title": "トークンバケットフロー",
+      "url": "https://via.placeholder.com/600/771796",
+      "thumbnailUrl": "https://via.placeholder.com/150/771796",
+      "albumId": 1
+    },
+    {
+      "id": 3,
+      "title": "パフォーマンスグラフ",
+      "url": "https://via.placeholder.com/600/24f355",
+      "thumbnailUrl": "https://via.placeholder.com/150/24f355",
+      "albumId": 2
+    }
+  ]
+} 

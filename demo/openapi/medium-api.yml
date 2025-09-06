@@ -1,0 +1,266 @@
+openapi: 3.0.3
+info:
+  title: Medium API
+  description: 中程度の外部API（3トークン消費）
+  version: 1.0.0
+  contact:
+    name: Token Bucket Demo
+    url: https://github.com/tokenbucket/demo
+
+servers:
+  - url: http://localhost:8083
+    description: 開発環境
+
+paths:
+  /api/medium:
+    get:
+      summary: 中程度API呼び出し
+      description: 中程度の処理を行うAPI（3トークン消費）
+      operationId: getMediumApi
+      tags:
+        - Medium API
+      parameters:
+        - name: complexity
+          in: query
+          description: 処理の複雑度
+          required: false
+          schema:
+            type: string
+            enum: [low, medium, high]
+            default: medium
+        - name: timeout
+          in: query
+          description: タイムアウト時間（秒）
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 60
+            default: 30
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediumApiResponse'
+              examples:
+                success:
+                  summary: 成功レスポンス
+                  value:
+                    status: "success"
+                    message: "Medium API response"
+                    timestamp: "2024-01-01T00:00:00Z"
+                    processingTime: 500
+                    tokenConsumed: 3
+                    complexity: "medium"
+                    dataProcessed: 1500
+        '429':
+          description: レート制限超過
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/medium/batch:
+    post:
+      summary: 中程度APIのバッチ処理
+      description: 複数のリクエストをバッチ処理するAPI（5トークン消費）
+      operationId: postMediumApiBatch
+      tags:
+        - Medium API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '429':
+          description: レート制限超過
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/medium/status:
+    get:
+      summary: 中程度APIの状態確認
+      description: 中程度APIの現在の状態を取得
+      operationId: getMediumApiStatus
+      tags:
+        - Medium API
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiStatusResponse'
+
+components:
+  schemas:
+    MediumApiResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          description: 処理結果のステータス
+        message:
+          type: string
+          description: レスポンスメッセージ
+        timestamp:
+          type: string
+          format: date-time
+          description: レスポンス時刻
+        processingTime:
+          type: integer
+          description: 処理時間（ミリ秒）
+        tokenConsumed:
+          type: integer
+          description: 消費したトークン数
+        complexity:
+          type: string
+          enum: [low, medium, high]
+          description: 処理の複雑度
+        dataProcessed:
+          type: integer
+          description: 処理したデータ量
+      required:
+        - status
+        - message
+        - timestamp
+        - processingTime
+        - tokenConsumed
+        - complexity
+        - dataProcessed
+
+    BatchRequest:
+      type: object
+      properties:
+        requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchRequestItem'
+          minItems: 1
+          maxItems: 10
+          description: バッチ処理するリクエストの配列
+        priority:
+          type: string
+          enum: [low, normal, high]
+          default: normal
+          description: 処理の優先度
+      required:
+        - requests
+
+    BatchRequestItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: リクエストID
+        data:
+          type: object
+          description: 処理するデータ
+        options:
+          type: object
+          description: 処理オプション
+
+    BatchResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, partial, error]
+          description: バッチ処理の結果
+        processed:
+          type: integer
+          description: 処理完了件数
+        total:
+          type: integer
+          description: 総リクエスト件数
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchResultItem'
+        processingTime:
+          type: integer
+          description: 総処理時間（ミリ秒）
+        tokenConsumed:
+          type: integer
+          description: 消費したトークン数
+
+    BatchResultItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: リクエストID
+        status:
+          type: string
+          enum: [success, error]
+          description: 個別処理の結果
+        result:
+          type: object
+          description: 処理結果
+        error:
+          type: string
+          description: エラーメッセージ（失敗時）
+
+    ApiStatusResponse:
+      type: object
+      properties:
+        apiName:
+          type: string
+          description: API名
+        status:
+          type: string
+          enum: [healthy, degraded, down]
+          description: APIの状態
+        lastCheck:
+          type: string
+          format: date-time
+          description: 最後のチェック時刻
+        responseTime:
+          type: integer
+          description: 平均レスポンス時間（ミリ秒）
+        uptime:
+          type: string
+          description: 稼働時間
+        queueSize:
+          type: integer
+          description: 現在のキューサイズ
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: エラーコード
+        message:
+          type: string
+          description: エラーメッセージ
+        timestamp:
+          type: string
+          format: date-time
+          description: エラー発生時刻
+        details:
+          type: object
+          description: エラーの詳細情報
+
+tags:
+  - name: Medium API
+    description: 中程度の外部API関連のエンドポイント 
